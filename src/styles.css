@@ -1,1 +1,54 @@
-/* You can add global styles to this file, and also import other style files */
+.boton{
+  height: 50px;
+  width: 70px;
+  background-color: blue;
+  color: white;
+  font-size: 20px;
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    overflow: hidden !important;
+}
+
+.overlay{
+  position: relative;
+}
+
+#particles-js {
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position:fixed;
+  top:0;
+  right:0;
+  bottom:0;
+  left:0;
+  z-index:0;
+}
+
+.c1{
+  background-image: url(assets/1.jpg);
+}
+
+.c2 {
+  background-image: url(assets/2.jpg);
+}
+
+.c3 {
+  background-image: url(assets/3.jpg);
+}
+
+.c4 {
+  background-image: url(assets/4.jpg);
+}
+
+.c5 {
+  background-image: url(assets/5.png);
+}
+
+.smallTitle{
+  color: white
+}
