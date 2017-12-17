@@ -1,15 +1,27 @@
 import { Component } from '@angular/core';
 import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/fromEvent';
+import * as io from 'socket.io-client';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
   options: any[];
   solutions: any[];
   tooglePlayer = true;
+  socket = null;
+
+  constructor(){
+    this.socket = io('url_server_socket');
+    let listener = Observable.fromEvent(this.socket, 'chat message');
+    listener.subscribe((payload) => {
+      console.log(`Hola ${payload}`);
+    });
+  }
 
   ngOnInit() {
     this.options = [
@@ -53,6 +65,7 @@ export class AppComponent implements OnInit {
 
   sendAction(id, propagate) {
     this.printSymbol(id);
+    this.socket.emit('chat message', id);
   }
 
   printSymbol(id) {

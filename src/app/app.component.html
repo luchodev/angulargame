@@ -4,7 +4,7 @@
 <br>
 <div class="row" *ngFor="let rowd of options; let i = index;">
   <div class="col-xs-4 col-sm-2 col-md-1" *ngFor="let column of options[i]">
-    <button class="btn btn-raised ripple-effect btn-primary" id="{{column.id}}" (click)="sendAction(column.id, true)"></button>
+    <button class="btn btn-raised ripple-effect btn-primary button-game" id="{{column.id}}" (click)="sendAction(column.id, true)"></button>
   </div>
 </div>
 <br>
