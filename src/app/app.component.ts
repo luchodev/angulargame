@@ -12,14 +12,24 @@ import * as io from 'socket.io-client';
 export class AppComponent implements OnInit {
   options: any[];
   solutions: any[];
-  tooglePlayer = true;
+
+  movementsPlayer: number[];
+  tooglePlayer: boolean;
+  isPlaying: boolean;
+  playerName: string;
   socket = null;
 
-  constructor(){
-    this.socket = io('url_server_socket');
-    let listener = Observable.fromEvent(this.socket, 'chat message');
-    listener.subscribe((payload) => {
-      console.log(`Hola ${payload}`);
+  constructor() {
+    this.socket = io('http://localhost:3000');
+    let listener = Observable.fromEvent(this.socket, 'recieveGameMovement');
+    listener.subscribe((idMarked) => {
+      if (this.playerName == undefined) {
+        this.playerName = "Player 2";
+        this.isPlaying = true;
+      }
+      this.printOptionSelected(idMarked);
+      console.log(`It have been marked ${idMarked}`);
+      console.log(`Player: ${this.tooglePlayer}`)
     });
   }
 
@@ -53,6 +63,9 @@ export class AppComponent implements OnInit {
       [9, 5, 1]
     ];
 
+    this.tooglePlayer = true;
+    this.movementsPlayer = [];
+
     this.backgroundPicture();
   }
 
@@ -63,18 +76,32 @@ export class AppComponent implements OnInit {
     el.classList.add(clase);
   }
 
-  sendAction(id, propagate) {
-    this.printSymbol(id);
-    this.socket.emit('chat message', id);
+  onOptionMarked(id) {
+    this.printOptionSelected(id);
+    this.validateNamePlayer();
+    this.addOptionToPlayer(id);
+    this.socket.emit('sendGameMovement', id);
   }
 
-  printSymbol(id) {
+  addOptionToPlayer(option: number): void {
+    this.movementsPlayer.push(option);
+  }
+
+  validateNamePlayer(): void {
+    if (this.movementsPlayer.length == 0 && !this.isPlaying) {
+      this.playerName = "Player 1";
+      this.isPlaying = true;
+    }
+  }
+
+  printOptionSelected(id): void {
     let elemento = document.getElementById(id);
     if (this.tooglePlayer) {
       elemento.innerHTML = 'X'
     } else {
       elemento.innerHTML = 'O'
     }
+    this.tooglePlayer = !this.tooglePlayer;
   }
 
 }
