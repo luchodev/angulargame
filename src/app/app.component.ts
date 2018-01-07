@@ -3,6 +3,7 @@ import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import * as io from 'socket.io-client';
+import { fail } from 'assert';
 
 @Component({
   selector: 'app-root',
@@ -18,18 +19,31 @@ export class AppComponent implements OnInit {
   isPlaying: boolean;
   playerName: string;
   socket = null;
+  roomId: number;
 
   constructor() {
     this.socket = io('http://localhost:3000');
-    let listener = Observable.fromEvent(this.socket, 'recieveGameMovement');
-    listener.subscribe((idMarked) => {
+    let gameMovementListener = Observable.fromEvent(this.socket, 'recieveGameMovement');
+    gameMovementListener.subscribe((idMarked) => {
       if (this.playerName == undefined) {
         this.playerName = "Player 2";
+        this.disableBoard();
         this.isPlaying = true;
       }
       this.printOptionSelected(idMarked);
-      console.log(`It have been marked ${idMarked}`);
-      console.log(`Player: ${this.tooglePlayer}`)
+      this.enableBoard();
+    });
+
+    let roomListener = Observable.fromEvent(this.socket, 'sendIdRoom');
+    roomListener.subscribe((idRoom) => {
+      console.log(`Room No. ${idRoom}`);
+      this.roomId = Number(idRoom);
+    });
+
+    let gameOverListener = Observable.fromEvent(this.socket, 'recieveGameOver');
+    gameOverListener.subscribe((solution) => {
+      this.printSolution(<number[]>solution);
+      this.printLoseMessage();
     });
   }
 
@@ -79,18 +93,12 @@ export class AppComponent implements OnInit {
   onOptionMarked(id) {
     this.printOptionSelected(id);
     this.validateNamePlayer();
+    this.disableBoard();
     this.addOptionToPlayer(id);
-    this.socket.emit('sendGameMovement', id);
-  }
-
-  addOptionToPlayer(option: number): void {
-    this.movementsPlayer.push(option);
-  }
-
-  validateNamePlayer(): void {
-    if (this.movementsPlayer.length == 0 && !this.isPlaying) {
-      this.playerName = "Player 1";
-      this.isPlaying = true;
+    if (!this.validateWin()) {
+      this.socket.emit('sendGameMovement', this.roomId, id);
+    } else {
+      this.printWinMessage();
     }
   }
 
@@ -102,6 +110,75 @@ export class AppComponent implements OnInit {
       elemento.innerHTML = 'O'
     }
     this.tooglePlayer = !this.tooglePlayer;
+  }
+
+  validateNamePlayer(): void {
+    if (this.movementsPlayer.length == 0 && !this.isPlaying) {
+      this.playerName = "Player 1";
+      this.isPlaying = true;
+    }
+  }
+
+  disableBoard(): void {
+    for (let i = 1; i < 10; i++) {
+      var element = <HTMLInputElement>document.getElementById(i.toString());
+      element.disabled = true;
+    }
+  }
+
+  addOptionToPlayer(option: number): void {
+    this.movementsPlayer.push(option);
+  }
+
+  validateWin(): boolean {
+    for (let index = 0; index < this.solutions.length; index++) {
+      if (this.validateSingleCombination(this.solutions[index])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  validateSingleCombination(combination: number[]): boolean {
+    let result = true;
+    for (let i = 0; i < combination.length; i++) {
+      if (!this.movementsPlayer.includes(combination[i])) {
+        result = false;
+      }
+      if (i == combination.length - 1 && result) {
+        this.printSolution(combination);
+        this.sendWinAlert(combination);
+        return result;
+      }
+    }
+  }
+
+  enableBoard(): void {
+    for (let i = 1; i < 10; i++) {
+      var element = <HTMLInputElement>document.getElementById(i.toString());
+      if (element.innerHTML == "") {
+        element.disabled = false;
+      }
+    }
+  }
+
+  printSolution(solution: number[]): void {
+    solution.forEach(s => {
+      let el = document.getElementById(s.toString());
+      el.style.backgroundColor = "green";
+    });
+  }
+
+  sendWinAlert(solution: number[]): void {
+    this.socket.emit('sendGameOver', this.roomId, solution);
+  }
+
+  printWinMessage(): void {
+    console.log(`You has won!`);
+  }
+
+  printLoseMessage(): void {
+    console.log(`you has losed`);
   }
 
 }
