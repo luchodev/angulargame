@@ -4,6 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import * as io from 'socket.io-client';
 declare var particlesJS: any;
+declare var iziToast: any;
 
 @Component({
   selector: 'app-root',
@@ -42,8 +43,8 @@ export class AppComponent implements OnInit {
 
     let gameOverListener = Observable.fromEvent(this.socket, 'recieveGameOver');
     gameOverListener.subscribe((solution) => {
-    this.printSolution(<number[]>solution);
-    this.printLoseMessage();
+      this.printSolution(<number[]>solution);
+      this.printLoseMessage();
     });
   }
 
@@ -79,6 +80,8 @@ export class AppComponent implements OnInit {
 
     this.tooglePlayer = true;
     this.movementsPlayer = [];
+
+
 
     particlesJS.load('particles-js', 'assets/particles.json', null);
     this.backgroundPicture();
@@ -175,11 +178,49 @@ export class AppComponent implements OnInit {
   }
 
   printWinMessage(): void {
-    console.log(`You has won!`);
+    let n = Math.floor((Math.random() * 5) + 1);
+
+    iziToast.show({
+      color: 'green',
+      image: `assets/images/success/${n}.jpg`,
+      imageWidth: 100,
+      timeout: 6000,
+      close: false,
+      title: 'Hey',
+      message: 'Congratulations, you have won!',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }]
+      ]
+    });
   }
 
   printLoseMessage(): void {
-    console.log(`you has losed`);
+    let n = Math.floor((Math.random() * 5) + 1);
+
+    iziToast.show({
+      color: 'red',
+      image: `assets/images/fail/${n}.jpg`,
+      imageWidth: 100,
+      timeout: 6000,
+      close: false,
+      title: 'Hey',
+      message: 'You were defeated :(',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }]
+      ]
+    });
   }
 
 }
