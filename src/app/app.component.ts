@@ -46,6 +46,12 @@ export class AppComponent implements OnInit {
       this.printSolution(<number[]>solution);
       this.printLoseMessage();
     });
+
+    let newGameListener = Observable.fromEvent(this.socket, 'recieveNewGame');
+    newGameListener.subscribe(() => {
+      this.resetGame();
+      this.printNewGameMessage();
+    });
   }
 
   ngOnInit() {
@@ -80,8 +86,6 @@ export class AppComponent implements OnInit {
 
     this.tooglePlayer = true;
     this.movementsPlayer = [];
-
-
 
     particlesJS.load('particles-js', 'assets/particles.json', null);
     this.backgroundPicture();
@@ -151,7 +155,7 @@ export class AppComponent implements OnInit {
       }
       if (i == combination.length - 1 && result) {
         this.printSolution(combination);
-        this.sendWinAlert(combination);
+        this.sendWinNotification(combination);
         return result;
       }
     }
@@ -169,22 +173,30 @@ export class AppComponent implements OnInit {
   printSolution(solution: number[]): void {
     solution.forEach(s => {
       let el = document.getElementById(s.toString());
+      if (el.innerHTML == "") {
+        this.printOptionSelected(s);
+      }
       el.style.backgroundColor = "green";
     });
   }
 
-  sendWinAlert(solution: number[]): void {
+  sendWinNotification(solution: number[]): void {
     this.socket.emit('sendGameOver', this.roomId, solution);
+  }
+
+  sendNewGameNotification(): void {
+    this.socket.emit('sendNewGame', this.roomId);
   }
 
   printWinMessage(): void {
     let n = Math.floor((Math.random() * 5) + 1);
+    let self = this;
 
     iziToast.show({
       color: 'green',
       image: `assets/images/success/${n}.jpg`,
       imageWidth: 100,
-      timeout: 6000,
+      timeout: false,
       close: false,
       title: 'Hey',
       message: 'Congratulations, you have won!',
@@ -195,19 +207,24 @@ export class AppComponent implements OnInit {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
-        }]
+        }],
+        ['<button>Reset Game</button>', function (instance, toast) {
+          self.resetGame();
+          self.sendNewGameNotification();
+        }, true]
       ]
     });
   }
 
   printLoseMessage(): void {
     let n = Math.floor((Math.random() * 5) + 1);
+    let self = this;
 
     iziToast.show({
       color: 'red',
       image: `assets/images/fail/${n}.jpg`,
       imageWidth: 100,
-      timeout: 6000,
+      timeout: false,
       close: false,
       title: 'Hey',
       message: 'You were defeated :(',
@@ -218,9 +235,45 @@ export class AppComponent implements OnInit {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
+        }],
+        ['<button>Reset Game</button>', function (instance, toast) {
+          self.resetGame();
+          self.sendNewGameNotification();
+        }, true]
+      ]
+    });
+  }
+
+  printNewGameMessage(): void {
+    iziToast.show({
+      theme: 'dark',
+      image: `assets/images/fail/1.jpg`,
+      imageWidth: 100,
+      timeout: 5000,
+      close: false,
+      title: 'Hey',
+      message: 'It seems your oponent want another game!',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Ok</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
         }]
       ]
     });
+  }
+
+  resetGame(): void {
+    for (let i = 1; i < 10; i++) {
+      var el = <HTMLInputElement>document.getElementById(i.toString());
+      el.innerHTML = "";
+      el.disabled = false;
+      el.style.backgroundColor = 'rgb(' + 51 + ',' + 122 + ',' + 183 + ')';
+    }
+
+    this.movementsPlayer = [];
   }
 
 }
