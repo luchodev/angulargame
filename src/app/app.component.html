@@ -1,14 +1,18 @@
-<h1>Juego Triqui
-  <small class="smallTitle">(Angular)</small>
-</h1>
-<br>
-<div class="row" *ngFor="let rowd of options; let i = index;">
-  <div class="col-xs-4 col-sm-2 col-md-1" *ngFor="let column of options[i]">
-    <button class="btn btn-raised ripple-effect btn-primary button-game" id="{{column.id}}" (click)="onOptionMarked(column.id)"></button>
+<div id="particles-js"></div>
+
+<div class="overlay">
+  <h1>Juego Triqui
+    <small class="smallTitle">(Angular)</small>
+  </h1>
+  <br>
+  <div class="row" *ngFor="let rowd of options; let i = index;">
+    <div class="col-xs-4 col-sm-2 col-md-1" *ngFor="let column of options[i]">
+      <button class="btn btn-raised ripple-effect btn-primary button-game" id="{{column.id}}" (click)="onOptionMarked(column.id)"></button>
+    </div>
   </div>
+  <div class="row">
+    <span> {{playerName}} </span>
+  </div>
+  <br>
+  <hr>
 </div>
-<div class="row">
-  <span> {{playerName}} </span>
-</div>
-<br>
-<hr>

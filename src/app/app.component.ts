@@ -3,7 +3,7 @@ import { OnInit } from '@angular/core/src/metadata/lifecycle_hooks';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromEvent';
 import * as io from 'socket.io-client';
-import { fail } from 'assert';
+declare var particlesJS: any;
 
 @Component({
   selector: 'app-root',
@@ -42,8 +42,8 @@ export class AppComponent implements OnInit {
 
     let gameOverListener = Observable.fromEvent(this.socket, 'recieveGameOver');
     gameOverListener.subscribe((solution) => {
-      this.printSolution(<number[]>solution);
-      this.printLoseMessage();
+    this.printSolution(<number[]>solution);
+    this.printLoseMessage();
     });
   }
 
@@ -80,6 +80,7 @@ export class AppComponent implements OnInit {
     this.tooglePlayer = true;
     this.movementsPlayer = [];
 
+    particlesJS.load('particles-js', 'assets/particles.json', null);
     this.backgroundPicture();
   }
 
