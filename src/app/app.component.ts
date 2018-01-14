@@ -20,11 +20,30 @@ export class AppComponent implements OnInit {
   isPlaying: boolean;
   playerName: string;
   socket = null;
-  roomId: number;
+  roomId: string;
 
   constructor() {
     this.socket = io('http://localhost:3000');
-    let gameMovementListener = Observable.fromEvent(this.socket, 'recieveGameMovement');
+
+    let roomListener = Observable.fromEvent(this.socket, 'receiveConnectionInfo');
+    roomListener.subscribe((connectionInfo: any) => {
+      console.log(`Room No: ${connectionInfo.idRoom} Player Number: ${connectionInfo.numberPlayer}`);
+      this.roomId = connectionInfo.idRoom;
+      if (connectionInfo.isActive) {
+        this.disableBoard();
+        this.printNoOpponentMessage();
+      } else {
+        this.enableBoard();
+        this.printOpponentConnectedMessage();
+      }
+    });
+
+    let disconnectListener = Observable.fromEvent(this.socket, 'userDisconnected');
+    disconnectListener.subscribe((connectionInfo) => {
+      this.printOpponentHasLeaveMessage();
+    });
+
+    let gameMovementListener = Observable.fromEvent(this.socket, 'receiveGameMovement');
     gameMovementListener.subscribe((idMarked) => {
       if (this.playerName == undefined) {
         this.playerName = "Player 2";
@@ -35,19 +54,13 @@ export class AppComponent implements OnInit {
       this.enableBoard();
     });
 
-    let roomListener = Observable.fromEvent(this.socket, 'sendIdRoom');
-    roomListener.subscribe((idRoom) => {
-      console.log(`Room No. ${idRoom}`);
-      this.roomId = Number(idRoom);
-    });
-
-    let gameOverListener = Observable.fromEvent(this.socket, 'recieveGameOver');
+    let gameOverListener = Observable.fromEvent(this.socket, 'receiveGameOver');
     gameOverListener.subscribe((solution) => {
       this.printSolution(<number[]>solution);
       this.printLoseMessage();
     });
 
-    let newGameListener = Observable.fromEvent(this.socket, 'recieveNewGame');
+    let newGameListener = Observable.fromEvent(this.socket, 'receiveNewGame');
     newGameListener.subscribe(() => {
       this.resetGame();
       this.printNewGameMessage();
@@ -186,6 +199,89 @@ export class AppComponent implements OnInit {
 
   sendNewGameNotification(): void {
     this.socket.emit('sendNewGame', this.roomId);
+  }
+
+  printNoOpponentMessage(): void {
+    let n = Math.floor((Math.random() * 5) + 1);
+    let self = this;
+
+    iziToast.show({
+      color: 'green',
+      image: `assets/images/success/${n}.jpg`,
+      imageWidth: 100,
+      timeout: false,
+      close: false,
+      title: 'Hey',
+      message: 'No opponent connected, yet!',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }],
+        ['<button>Reset Game</button>', function (instance, toast) {
+          self.resetGame();
+          self.sendNewGameNotification();
+        }, true]
+      ]
+    });
+  }
+
+  printOpponentConnectedMessage(): void {
+    let n = Math.floor((Math.random() * 5) + 1);
+    let self = this;
+
+    iziToast.show({
+      color: 'green',
+      image: `assets/images/success/${n}.jpg`,
+      imageWidth: 100,
+      timeout: false,
+      close: false,
+      title: 'Hey',
+      message: "You opponent has connected, let's play!",
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }],
+        ['<button>Reset Game</button>', function (instance, toast) {
+          self.resetGame();
+          self.sendNewGameNotification();
+        }, true]
+      ]
+    });
+  }
+
+  printOpponentHasLeaveMessage(): void {
+    let n = Math.floor((Math.random() * 5) + 1);
+    let self = this;
+
+    iziToast.show({
+      color: 'green',
+      image: `assets/images/success/${n}.jpg`,
+      imageWidth: 100,
+      timeout: false,
+      close: false,
+      title: 'Hey',
+      message: 'Your opponent has disconnected',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button>Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }],
+        ['<button>Reload To connect another Opponents</button>', function (instance, toast) {
+          location.reload();
+        }, true]
+      ]
+    });
   }
 
   printWinMessage(): void {
