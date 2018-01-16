@@ -66,6 +66,12 @@ export class AppComponent implements OnInit {
       this.resetGame();
       this.printNewGameMessage();
     });
+
+    let noWinnerListener = Observable.fromEvent(this.socket, 'receiveNoWinner');
+    noWinnerListener.subscribe(() => {
+      this.printNoWinnerMessage();
+    });
+
   }
 
   ngOnInit() {
@@ -122,6 +128,7 @@ export class AppComponent implements OnInit {
     } else {
       this.printWinMessage();
     }
+    this.validateATie();
   }
 
   printOptionSelected(id): void {
@@ -159,6 +166,21 @@ export class AppComponent implements OnInit {
       }
     }
     return false;
+  }
+
+  validateATie(): void {
+    let sum = 0;
+    for (let i = 1; i < 10; i++) {
+      var element = <HTMLInputElement>document.getElementById(i.toString());
+      if (element.innerHTML != "") {
+        sum++;
+      }
+    }
+
+    if (sum == 9) {
+      this.printNoWinnerMessage();
+      this.sendNoWinnerNotification();
+    }
   }
 
   validateSingleCombination(combination: number[]): boolean {
@@ -204,6 +226,10 @@ export class AppComponent implements OnInit {
 
   sendGameMovementNotification(id: number): void {
     this.socket.emit('sendGameMovement', this.roomId, id);
+  }
+
+  sendNoWinnerNotification(): void {
+    this.socket.emit('noWinner', this.roomId);
   }
 
   printNoOpponentMessage(): void {
@@ -348,6 +374,8 @@ export class AppComponent implements OnInit {
     if (el != null) { el.click(); }
     el = document.getElementById('win-message-id');
     if (el != null) { el.click(); }
+    el = document.getElementById('no-winner-message-id');
+    if (el != null) { el.click(); }
 
     iziToast.show({
       theme: 'dark',
@@ -365,6 +393,37 @@ export class AppComponent implements OnInit {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
         }]
+      ]
+    });
+  }
+
+  printNoWinnerMessage(): void {
+    let n = Math.floor((Math.random() * 2) + 1);
+    let self = this;
+
+    iziToast.show({
+      theme: 'dark',
+      image: `assets/images/no-winner/${n}.png`,
+      imageWidth: 100,
+      timeout: false,
+      close: false,
+      title: 'Hey!',
+      message: 'Nobody has won!',
+      position: 'topCenter',
+      progressBarColor: 'rgb(0, 255, 184)',
+      buttons: [
+        ['<button id="no-winner-message-id">Close</button>', function (instance, toast) {
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }],
+        ['<button>Reset Game</button>', function (instance, toast) {
+          self.resetGame();
+          self.sendNewGameNotification();
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
+        }, true]
       ]
     });
   }
