@@ -11,6 +11,7 @@ declare var iziToast: any;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
+
 export class AppComponent implements OnInit {
   options: any[];
   solutions: any[];
@@ -47,8 +48,8 @@ export class AppComponent implements OnInit {
     gameMovementListener.subscribe((idMarked) => {
       if (this.playerName == undefined) {
         this.playerName = "Player 2";
-        this.disableBoard();
         this.isPlaying = true;
+        this.disableBoard();
       }
       this.printOptionSelected(idMarked);
       this.enableBoard();
@@ -117,7 +118,7 @@ export class AppComponent implements OnInit {
     this.disableBoard();
     this.addOptionToPlayer(id);
     if (!this.validateWin()) {
-      this.socket.emit('sendGameMovement', this.roomId, id);
+      this.sendGameMovementNotification(id);
     } else {
       this.printWinMessage();
     }
@@ -201,45 +202,45 @@ export class AppComponent implements OnInit {
     this.socket.emit('sendNewGame', this.roomId);
   }
 
+  sendGameMovementNotification(id: number): void {
+    this.socket.emit('sendGameMovement', this.roomId, id);
+  }
+
   printNoOpponentMessage(): void {
-    let n = Math.floor((Math.random() * 5) + 1);
-    let self = this;
+    let n = Math.floor((Math.random() * 3) + 1);
 
     iziToast.show({
-      color: 'green',
-      image: `assets/images/success/${n}.jpg`,
+      theme: 'dark',
+      image: `assets/images/no-opponent/${n}.jpg`,
       imageWidth: 100,
       timeout: false,
       close: false,
-      title: 'Hey',
-      message: 'No opponent connected, yet!',
+      title: 'Bad news :(',
+      message: 'No opponent connected, yet..',
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
       buttons: [
-        ['<button>Close</button>', function (instance, toast) {
+        ['<button id="no-opponent-message-id">Close</button>', function (instance, toast) {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
-        }],
-        ['<button>Reset Game</button>', function (instance, toast) {
-          self.resetGame();
-          self.sendNewGameNotification();
-        }, true]
+        }]
       ]
     });
   }
 
   printOpponentConnectedMessage(): void {
-    let n = Math.floor((Math.random() * 5) + 1);
-    let self = this;
+    let n = Math.floor((Math.random() * 3) + 1);
+    let el = document.getElementById('no-opponent-message-id');
+    if (el != null) { el.click(); }
 
     iziToast.show({
-      color: 'green',
-      image: `assets/images/success/${n}.jpg`,
+      color: 'blue',
+      image: `assets/images/new-opponent/${n}.jpg`,
       imageWidth: 100,
-      timeout: false,
+      timeout: 5000,
       close: false,
-      title: 'Hey',
+      title: 'Good news!',
       message: "You opponent has connected, let's play!",
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
@@ -248,26 +249,21 @@ export class AppComponent implements OnInit {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
-        }],
-        ['<button>Reset Game</button>', function (instance, toast) {
-          self.resetGame();
-          self.sendNewGameNotification();
-        }, true]
+        }]
       ]
     });
   }
 
   printOpponentHasLeaveMessage(): void {
-    let n = Math.floor((Math.random() * 5) + 1);
-    let self = this;
-
+    let n = Math.floor((Math.random() * 3) + 1);
+    this.disableBoard();
     iziToast.show({
-      color: 'green',
-      image: `assets/images/success/${n}.jpg`,
+      theme: 'light',
+      image: `assets/images/leave-game/${3}.jpg`,
       imageWidth: 100,
       timeout: false,
       close: false,
-      title: 'Hey',
+      title: 'Stop !',
       message: 'Your opponent has disconnected',
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
@@ -294,12 +290,12 @@ export class AppComponent implements OnInit {
       imageWidth: 100,
       timeout: false,
       close: false,
-      title: 'Hey',
+      title: 'Hey!',
       message: 'Congratulations, you have won!',
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
       buttons: [
-        ['<button>Close</button>', function (instance, toast) {
+        ['<button id="win-message-id">Close</button>', function (instance, toast) {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
@@ -307,6 +303,9 @@ export class AppComponent implements OnInit {
         ['<button>Reset Game</button>', function (instance, toast) {
           self.resetGame();
           self.sendNewGameNotification();
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
         }, true]
       ]
     });
@@ -322,12 +321,12 @@ export class AppComponent implements OnInit {
       imageWidth: 100,
       timeout: false,
       close: false,
-      title: 'Hey',
+      title: 'Hey!',
       message: 'You were defeated :(',
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
       buttons: [
-        ['<button>Close</button>', function (instance, toast) {
+        ['<button id="lose-message-id">Close</button>', function (instance, toast) {
           instance.hide(toast, {
             transitionOut: 'fadeOutUp'
           }, 'close', 'buttonName');
@@ -335,19 +334,28 @@ export class AppComponent implements OnInit {
         ['<button>Reset Game</button>', function (instance, toast) {
           self.resetGame();
           self.sendNewGameNotification();
+          instance.hide(toast, {
+            transitionOut: 'fadeOutUp'
+          }, 'close', 'buttonName');
         }, true]
       ]
     });
   }
 
   printNewGameMessage(): void {
+    let n = Math.floor((Math.random() * 3) + 1);
+    let el = document.getElementById('lose-message-id');
+    if (el != null) { el.click(); }
+    el = document.getElementById('win-message-id');
+    if (el != null) { el.click(); }
+
     iziToast.show({
       theme: 'dark',
-      image: `assets/images/fail/1.jpg`,
+      image: `assets/images/new-opponent/${n}.jpg`,
       imageWidth: 100,
       timeout: 5000,
       close: false,
-      title: 'Hey',
+      title: 'Hey!',
       message: 'It seems your oponent want another game!',
       position: 'topCenter',
       progressBarColor: 'rgb(0, 255, 184)',
